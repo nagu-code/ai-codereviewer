@@ -6,13 +6,14 @@ import parseDiff, { Chunk, File } from "parse-diff";
 import minimatch from "minimatch";
 
 const GITHUB_TOKEN: string = core.getInput("GITHUB_TOKEN");
-const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
-const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
+const AI_API_MODEL: string = core.getInput("AI_API_MODEL");
+const BASE_SERVER_URL: string = core.getInput("BASE_SERVER_URL");
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
+  baseURL: `${BASE_SERVER_URL}/v1`,
+  apiKey: 'ollama', // required but unused
 });
 
 interface PRDetails {
@@ -90,7 +91,7 @@ function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
 Review the following code diff in the file "${
     file.to
   }" and take the pull request title and description into account when writing the response.
-  
+
 Pull request title: ${prDetails.title}
 Pull request description:
 
@@ -115,21 +116,17 @@ async function getAIResponse(prompt: string): Promise<Array<{
   reviewComment: string;
 }> | null> {
   const queryConfig = {
-    model: OPENAI_API_MODEL,
-    temperature: 0.2,
-    max_tokens: 700,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
+    model: AI_API_MODEL,
+    // temperature: 0.2,
+    // max_tokens: 700,
+    // top_p: 1,
+    // frequency_penalty: 0,
+    // presence_penalty: 0,
   };
 
   try {
     const response = await openai.chat.completions.create({
       ...queryConfig,
-      // return JSON if the model supports it:
-      ...(OPENAI_API_MODEL === "gpt-4-1106-preview"
-        ? { response_format: { type: "json_object" } }
-        : {}),
       messages: [
         {
           role: "system",

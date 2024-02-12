@@ -1,4 +1,4 @@
-name: Code Review with OpenAI
+name: AI Code Review
 on:
   pull_request:
     types:
@@ -12,9 +12,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Code Review
-        uses: freeedcom/ai-codereviewer@main
+        uses: nagu-code/ai-codereviewer@main
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_API_MODEL: "gpt-4-1106-preview"
+          BASE_SERVER_URL: ${{ secrets.BASE_AI_SERVER_URL }}
           exclude: "yarn.lock,dist/**"

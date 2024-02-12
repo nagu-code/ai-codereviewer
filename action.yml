@@ -4,13 +4,13 @@ inputs:
   GITHUB_TOKEN:
     description: "GitHub token to interact with the repository."
     required: true
-  OPENAI_API_KEY:
-    description: "OpenAI API key for GPT."
+  BASE_SERVER_URL:
+    description: "Ollama server"
     required: true
-  OPENAI_API_MODEL:
-    description: "OpenAI API model."
+  AI_API_MODEL:
+    description: "AI API model."
     required: false
-    default: "gpt-4"
+    default: "codellama:7b"
   exclude:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false
