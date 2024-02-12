@@ -1,19 +1,14 @@
 import { readFileSync } from "fs";
 import * as core from "@actions/core";
-import OpenAI from "openai";
 import { Octokit } from "@octokit/rest";
 import parseDiff, { Chunk, File } from "parse-diff";
 import minimatch from "minimatch";
+import ollama from 'ollama'
 
 const GITHUB_TOKEN: string = core.getInput("GITHUB_TOKEN");
-const OPENAI_API_KEY: string = core.getInput("OPENAI_API_KEY");
-const OPENAI_API_MODEL: string = core.getInput("OPENAI_API_MODEL");
+const API_MODEL: string = core.getInput("API_MODEL");
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
-
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-});
 
 interface PRDetails {
   owner: string;
@@ -90,7 +85,7 @@ function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
 Review the following code diff in the file "${
     file.to
   }" and take the pull request title and description into account when writing the response.
-  
+
 Pull request title: ${prDetails.title}
 Pull request description:
 
@@ -114,31 +109,13 @@ async function getAIResponse(prompt: string): Promise<Array<{
   lineNumber: string;
   reviewComment: string;
 }> | null> {
-  const queryConfig = {
-    model: OPENAI_API_MODEL,
-    temperature: 0.2,
-    max_tokens: 700,
-    top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0,
-  };
-
   try {
-    const response = await openai.chat.completions.create({
-      ...queryConfig,
-      // return JSON if the model supports it:
-      ...(OPENAI_API_MODEL === "gpt-4-1106-preview"
-        ? { response_format: { type: "json_object" } }
-        : {}),
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-      ],
+    const response = await ollama.chat({
+      model: API_MODEL,
+      messages: [{ role: 'system', content: prompt }],
     });
 
-    const res = response.choices[0].message?.content?.trim() || "{}";
+    const res = response.message.content.trim() || "{}";
     return JSON.parse(res).reviews;
   } catch (error) {
     console.error("Error:", error);
